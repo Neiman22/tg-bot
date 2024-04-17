@@ -17,7 +17,21 @@ const gameOptions = {
   })
 };
 
-const start = () => {
+const againOptions = {
+  reply_markup: JSON.stringify({
+    inline_keyboard: [
+      [{text: 'Еще раз', callback_data: '/again'}]
+    ]
+  })
+};
+
+const startGame = async (chatId) => {
+  const randomNumber = Math.floor(Math.random() * 10);
+  chats[chatId] = randomNumber;
+  await bot.sendMessage(chatId, 'Отгадай число', gameOptions);
+}
+
+const start = async () => {
   bot.setMyCommands([
     {command: '/start', description: 'Начальное приветствие'},
     {command: '/info', description: 'Информация о пользователе'},
@@ -36,10 +50,7 @@ const start = () => {
       return bot.sendMessage(chatId, `Тебя зовут ${msg.from.first_name} ${msg.from.last_name}`);
     }
     if (text === '/game') {
-      await bot.sendMessage(chatId, 'Отгадай число');
-      const randomNumber = Math.floor(Math.random() * 10);
-      chats[chatId] = randomNumber;
-      return bot.sendMessage(chatId, 'Отгадай', gameOptions);
+      return startGame(chatId);
     }
     return bot.sendMessage(chatId, `Неверная команда`);
   })
@@ -48,10 +59,14 @@ const start = () => {
     const data = msg.data;
     const chatId = msg.message.chat.id
 
+    if (data === '/again') {
+      return startGame(chatId);
+    }
+
     if (data == chats[chatId]) {
-      await bot.sendMessage(chatId, `Ты угадал!!!`);
+      await bot.sendMessage(chatId, `Ты угадал!!!`, againOptions);
     } else {
-      await bot.sendMessage(chatId, `Цифра ${data} не верна ${chats[chatId]}`);
+      await bot.sendMessage(chatId, `Цифра ${data} не верна ${chats[chatId]}`, againOptions);
     }
     
   })
